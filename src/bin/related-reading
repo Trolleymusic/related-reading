@@ -8,4 +8,6 @@ var path = require('path')
     
 args.splice(0,2)
 
+args[0] = JSON.parse(args[0])
+
 require(lib+'/related-reading.js').query.apply(this, args)

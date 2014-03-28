@@ -17,7 +17,8 @@
     "uppercaseme": "./bin/related-reading"
   },
   "dependencies": {
-    "superagent": "~0.15.4"
+    "superagent": "~0.15.4",
+    "xml2js": "~0.4.1"
   },
   "engines": {
     "node": "*"
