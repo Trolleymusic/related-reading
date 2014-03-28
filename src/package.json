@@ -14,7 +14,7 @@
     "medical"
   ],
   "bin": {
-    "uppercaseme": "./bin/related-reading"
+    "related-reading": "./bin/related-reading"
   },
   "dependencies": {
     "superagent": "~0.15.4",
