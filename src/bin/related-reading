@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+"use strict";
+var path = require('path')
+    , fs = require('fs')
+    , lib = path.join(path.dirname(fs.realpathSync(__filename)), '../lib')
+    , args = process.argv
+    
+args.splice(0,2)
+
+require(lib+'/related-reading.js').query.apply(this, args)
