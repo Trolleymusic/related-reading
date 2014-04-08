@@ -40,7 +40,13 @@ initQuery = function (options, callback) {
   
 }
 
-exports.query = initQuery
+exports.query = function (options, callback) {
+  try {
+    initQuery(options, callback)
+  } catch(e) {
+    console.log('catch', e)
+  }
+}
 
 
 sendFinalResult = function () {
@@ -51,12 +57,12 @@ sendFinalResult = function () {
     if (finalResult[s] === null) { return }
   }
   
-  return finalCallback(finalResult)
+  return finalCallback(false, finalResult)
   
 }
 
-noCallback = function (send) {
-  console.log(JSON.stringify(send))
+noCallback = function (err, send) {
+  console.log(err, JSON.stringify(send))
 }
 
 pubmed = {
@@ -70,6 +76,17 @@ pubmed = {
         db: 'pubmed' // Pubmed database key, this is always the same
         , usehistory: 'y' // Use history - saves the results on the server under the key & web params
       }
+  }
+  
+  // Abort
+  , fail: function (message) {
+      
+      finalResult.pubmed = {
+        error: [message]
+        , reason: message
+      }
+      
+      sendFinalResult()
   }
   
   // Fetch more information about the results of the search
@@ -90,10 +107,22 @@ pubmed = {
   , parseFetch: function (err, result) {
     var parser = new xml2js.Parser({ async: true , explicitArray: false })
     
+    // There was an error
+    if (err) {
+      // Abort
+      return pubmed.fail('Failed to fetch results')
+    }
+    
     // Parse the results
     parser.parseString(result.text, function (err, parsed) {
       var send = []
           , i
+      
+      // There was an error
+      if (err) {
+        // Abort
+        return pubmed.fail('Failed to parse fetch results')
+      }
       
       if (parsed && parsed.PubmedArticleSet && parsed.PubmedArticleSet.PubmedArticle) {
         send = parsed.PubmedArticleSet.PubmedArticle
@@ -160,8 +189,30 @@ pubmed = {
   , searchParse: function (err, result) {
     var parser = new xml2js.Parser({ async: true })
     
+    // There was an error
+    if (err) {
+      // Abort
+      return pubmed.fail('Failed to find results')
+    }
+
+    
     // Parse the results
     parser.parseString(result.text, function (err, parsed) {
+      
+      // There was an error
+      if (err) {
+        // Abort
+        return pubmed.fail('Failed to parse search results')
+      }
+      
+      // The results haven't come back as expected
+      if (!parsed.eSearchResult.QueryKey || !parsed.eSearchResult.QueryKey[0]
+          || parsed.eSearchResult.WebEnv || !parsed.eSearchResult.WebEnv[0]) {
+        
+        // Abort
+        return pubmed.fail('Failed to parse search results')
+        
+      }
       
       pubmed.options.options.query_key = parsed.eSearchResult.QueryKey[0] // Set the key
       pubmed.options.options.WebEnv = parsed.eSearchResult.WebEnv[0] // Set the web environment
